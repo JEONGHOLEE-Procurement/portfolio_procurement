@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jeongho Lee — Procurement Systems</title>
+<meta name="description" content="구매를 시스템으로 만드는 사람. RFQ 자동화와 유성기어 협력업체 관리 시스템을 직접 설계하고 배포한 선행구매 담당자의 포트폴리오." />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --bg:#0a0e15;
+    --bg-2:#0f141e;
+    --surface:rgba(255,255,255,0.035);
+    --surface-2:rgba(255,255,255,0.06);
+    --border:rgba(255,255,255,0.09);
+    --text:#eef2f8;
+    --muted:#9aa4b7;
+    --faint:#646e82;
+    --accent:#f5a623;      /* amber / gear gold */
+    --accent-2:#38bdf8;    /* steel blue */
+    --accent-3:#f7c65a;
+    --grad:linear-gradient(120deg,#f5a623 0%,#f7c65a 100%);
+    --grad-steel:linear-gradient(120deg,#38bdf8 0%,#5eead4 100%);
+    --maxw:1160px;
+    --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%}
+  ::selection{background:rgba(245,166,35,.32)}
+
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-fx .glow{position:absolute;border-radius:50%;filter:blur(120px);opacity:.42}
+  .bg-fx .g1{width:520px;height:520px;background:#b5771a;top:-120px;left:-100px}
+  .bg-fx .g2{width:480px;height:480px;background:#155e75;bottom:-140px;right:-80px}
+  .bg-fx .g3{width:420px;height:420px;background:#3f3a1a;top:40%;left:55%;opacity:.3}
+
+  header.nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(20px,5vw,48px);backdrop-filter:blur(12px);background:linear-gradient(to bottom,rgba(10,14,21,.78),rgba(10,14,21,0));transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+  header.nav.scrolled{background:rgba(10,14,21,.85);border-bottom:1px solid var(--border)}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em}
+  .brand .dot{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;font-size:16px;color:#1a1204;box-shadow:0 4px 18px rgba(245,166,35,.45)}
+  .nav-links{display:flex;gap:6px;align-items:center}
+  .nav-links a{padding:8px 14px;border-radius:9px;color:var(--muted);font-size:14px;font-weight:600;transition:.2s}
+  .nav-links a:hover{color:var(--text);background:var(--surface-2)}
+  .nav-cta{background:var(--grad)!important;color:#1a1204!important;font-weight:800!important}
+  .burger{display:none;background:none;border:1px solid var(--border);color:var(--text);width:42px;height:42px;border-radius:10px;font-size:18px;cursor:pointer}
+
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:0 clamp(20px,5vw,48px);z-index:1}
+  #hero-canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(95deg,rgba(10,14,21,.94) 0%,rgba(10,14,21,.72) 38%,rgba(10,14,21,.2) 62%,rgba(10,14,21,0) 78%)}
+  @media(max-width:900px){.hero::after{background:linear-gradient(180deg,rgba(10,14,21,.55) 0%,rgba(10,14,21,.2) 30%,rgba(10,14,21,.7) 62%,rgba(10,14,21,.95) 100%)}}
+  .hero-inner{position:relative;z-index:2;max-width:var(--maxw);margin:0 auto;width:100%;padding-top:80px}
+  .tag{display:inline-flex;align-items:center;gap:9px;padding:7px 15px;border:1px solid var(--border);border-radius:100px;background:var(--surface);font-size:13px;color:var(--muted);font-weight:600;margin-bottom:26px}
+  .tag .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(245,166,35,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(245,166,35,.55)}70%{box-shadow:0 0 0 12px rgba(245,166,35,0)}100%{box-shadow:0 0 0 0 rgba(245,166,35,0)}}
+  .hero h1{font-size:clamp(2.6rem,7vw,5.1rem);line-height:1.04;letter-spacing:-.035em;font-weight:800;margin-bottom:22px}
+  .hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{font-size:clamp(1.05rem,2.2vw,1.32rem);color:var(--muted);max-width:640px;margin-bottom:36px}
+  .hero p.lead strong{color:var(--text);font-weight:700}
+  .hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:14px 26px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:.25s;border:1px solid transparent}
+  .btn-primary{background:var(--grad);color:#1a1204;box-shadow:0 8px 30px rgba(245,166,35,.35)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,166,35,.5)}
+  .btn-ghost{background:var(--surface);border-color:var(--border);color:var(--text)}
+  .btn-ghost:hover{background:var(--surface-2);border-color:rgba(255,255,255,.2)}
+  .scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:var(--faint);font-size:12px;letter-spacing:.2em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:2}
+  .scroll-hint .mouse{width:22px;height:34px;border:2px solid var(--faint);border-radius:12px;position:relative}
+  .scroll-hint .mouse::after{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:3px;height:7px;border-radius:2px;background:var(--faint);animation:scroll 1.6s infinite}
+  @keyframes scroll{0%{opacity:1;top:6px}100%{opacity:0;top:16px}}
+
+  section{position:relative;z-index:1}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(20px,5vw,48px)}
+  .sec{padding:clamp(70px,10vw,120px) 0}
+  .sec-head{margin-bottom:56px;max-width:720px}
+  .kicker{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+  .sec-head h2{font-size:clamp(1.9rem,4.5vw,3rem);letter-spacing:-.03em;font-weight:800;line-height:1.1;margin-bottom:16px}
+  .sec-head p{color:var(--muted);font-size:1.06rem}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:-40px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px 22px;text-align:center;backdrop-filter:blur(6px)}
+  .stat .num{font-size:clamp(2rem,4vw,2.8rem);font-weight:800;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+  .stat .lbl{color:var(--muted);font-size:13px;margin-top:9px;font-weight:600}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:26px}
+  .card{position:relative;background:linear-gradient(160deg,var(--surface-2),var(--surface));border:1px solid var(--border);border-radius:22px;padding:34px;overflow:hidden;transition:border-color .3s;display:grid;grid-template-columns:1.2fr .9fr;gap:34px;align-items:center}
+  .card::before{content:"";position:absolute;inset:0;background:radial-gradient(600px circle at var(--mx,50%) var(--my,0%),rgba(245,166,35,.12),transparent 42%);opacity:0;transition:opacity .35s;pointer-events:none}
+  .card:hover::before{opacity:1}
+  .card:hover{border-color:rgba(245,166,35,.4)}
+  .card.rev{grid-template-columns:.9fr 1.2fr}
+  .card.rev .card-body{order:2}
+  .card-emoji{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;font-size:27px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:18px}
+  .card-top{display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .card-top .badge{font-size:12px;font-weight:700;color:var(--accent-2);border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.08);padding:4px 10px;border-radius:8px}
+  .card h3{font-size:1.6rem;letter-spacing:-.02em;font-weight:800}
+  .card .role{font-size:14px;color:var(--accent);font-weight:700;margin:4px 0 16px}
+  .card p.desc{color:var(--muted);font-size:.98rem;margin-bottom:18px}
+  .bullets{list-style:none;margin-bottom:20px;display:flex;flex-direction:column;gap:9px}
+  .bullets li{color:var(--muted);font-size:.92rem;padding-left:22px;position:relative}
+  .bullets li::before{content:"⚙";position:absolute;left:0;color:var(--accent);font-size:.85rem;top:1px}
+  .bullets li b{color:var(--text);font-weight:700}
+  .tags{display:flex;flex-wrap:wrap;gap:7px}
+  .tags span{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:5px 11px;border-radius:8px}
+  .visual{aspect-ratio:1.05;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;background:radial-gradient(circle at 50% 40%,#131a26,#0b0f17)}
+  .visual canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* process flow */
+  .flow{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .step{flex:1 1 120px;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative}
+  .step .no{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.05em}
+  .step h5{font-size:1rem;font-weight:800;margin:4px 0 4px}
+  .step p{font-size:.82rem;color:var(--muted);line-height:1.45}
+  .track-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+  .track{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:9px 14px;border-radius:12px}
+  .track b{color:var(--text)}
+  .track .tk{width:11px;height:11px;border-radius:3px}
+
+  .tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+  .tech-cat{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px}
+  .tech-cat h5{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:14px;font-weight:700}
+  .tech-cat .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:13px;font-weight:600;padding:6px 12px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
+
+  .about-card{background:linear-gradient(160deg,var(--surface-2),var(--surface));border:1px solid var(--border);border-radius:24px;padding:clamp(30px,5vw,56px);display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+  .about-card h3{font-size:clamp(1.6rem,3.5vw,2.3rem);letter-spacing:-.03em;font-weight:800;margin-bottom:20px;line-height:1.22}
+  .about-card p{color:var(--muted);margin-bottom:16px}
+  .about-card .highlight{color:var(--text);font-weight:700}
+  .principles{display:flex;flex-direction:column;gap:16px}
+  .principle{display:flex;gap:14px;align-items:flex-start}
+  .principle .pn{width:38px;height:38px;flex:none;border-radius:11px;background:var(--grad);display:grid;place-items:center;font-weight:800;color:#1a1204;font-size:15px}
+  .principle b{display:block;font-size:1rem;margin-bottom:2px}
+  .principle span{color:var(--muted);font-size:.9rem}
+
+  .contact{text-align:center;padding:clamp(60px,9vw,110px) 0}
+  .contact h2{font-size:clamp(2rem,5vw,3.4rem);letter-spacing:-.035em;font-weight:800;margin-bottom:20px;line-height:1.1}
+  .contact h2 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .contact p{color:var(--muted);font-size:1.1rem;max-width:540px;margin:0 auto 34px}
+  .contact-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+  footer{border-top:1px solid var(--border);padding:34px clamp(20px,5vw,48px);text-align:center;color:var(--faint);font-size:13px;position:relative;z-index:1}
+
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .nav-links{display:none}
+    .burger{display:block}
+    .nav-links.open{display:flex;position:absolute;top:72px;right:20px;flex-direction:column;background:rgba(15,20,30,.97);border:1px solid var(--border);border-radius:14px;padding:10px;backdrop-filter:blur(14px);min-width:180px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .card,.card.rev{grid-template-columns:1fr}
+    .card .visual{order:-1}
+    .card.rev .card-body{order:0}
+    .about-card{grid-template-columns:1fr}
+  }
+  @media(max-width:480px){.stats{grid-template-columns:1fr 1fr;gap:12px}.card{padding:24px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"><div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div></div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#top"><span class="dot">⚙</span>Jeongho&nbsp;Lee</a>
+  <nav class="nav-links" id="navlinks">
+    <a href="#systems">시스템</a>
+    <a href="#process">공정</a>
+    <a href="#stack">스택</a>
+    <a href="#about">소개</a>
+    <a class="nav-cta" href="https://github.com/JEONGHOLEE-Procurement" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <button class="burger" id="burger" aria-label="menu">☰</button>
+</header>
+
+<section class="hero" id="top">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <span class="tag reveal"><span class="pulse"></span>자동차 부품 제조사 · 선행구매팀 (PI Purchasing)</span>
+    <h1 class="reveal">구매를<br><span class="grad">시스템으로</span> 만드는 사람</h1>
+    <p class="lead reveal">협력업체를 발굴·평가하고 원가를 협상하는 <strong>선행구매 실무</strong>를,
+      직접 만든 <strong>웹 시스템으로 자동화</strong>합니다.
+      RFQ 견적 자동화와 유성기어 협력업체 관리 — 엑셀로 반복하던 일을 배포 가능한 제품으로 바꿨습니다.</p>
+    <div class="hero-btns reveal">
+      <a class="btn btn-primary" href="#systems">구매 시스템 보기 →</a>
+      <a class="btn btn-ghost" href="#process">유성기어 공정 보기</a>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="mouse"></div>SCROLL</div>
+</section>
+
+<section class="wrap">
+  <div class="stats">
+    <div class="stat reveal"><div class="num" data-count="2">2</div><div class="lbl">직접 개발한 구매 시스템</div></div>
+    <div class="stat reveal"><div class="num" data-count="8">8</div><div class="lbl">단계 공정별 관리</div></div>
+    <div class="stat reveal"><div class="num" data-count="3">3</div><div class="lbl">Track 소재 병렬 구조</div></div>
+    <div class="stat reveal"><div class="num" data-count="5">5</div><div class="lbl">분석 화면 대시보드</div></div>
+  </div>
+</section>
+
+<section class="sec" id="systems">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="kicker">Procurement Systems</span>
+      <h2>내가 만든 구매 시스템</h2>
+      <p>구매 도메인 지식과 개발 역량을 결합해, 실무에서 반복되던 업무를 직접 웹 애플리케이션으로 시스템화했습니다.</p>
+    </div>
+
+    <div class="grid">
+
+      <!-- RFQ Automation -->
+      <article class="card reveal">
+        <div class="card-body">
+          <div class="card-emoji">📄</div>
+          <div class="card-top"><h3>RFQ 견적 자동화 시스템</h3><span class="badge">Quotation Auto</span></div>
+          <div class="role">RFQ 입력·저장·조회부터 공급업체 관리까지 · 웹앱</div>
+          <p class="desc">엑셀로 흩어져 있던 RFQ 견적 취합을, 입력하면 곧바로 DB에 쌓이고 이력으로 조회되는 웹 시스템으로 전환했습니다. 로컬 데이터를 클라우드 DB로 마이그레이션해 팀 단위로 확장 가능하게 만들었습니다.</p>
+          <ul class="bullets">
+            <li><b>RFQ 견적 입력·저장·조회</b> — 품목·공급사·수량·단가·통화 자동 계산</li>
+            <li><b>공급업체 관리</b> 및 견적 이력 누적 · REST API(GET/POST /api/rfqs)</li>
+            <li><b>localStorage → Postgres 마이그레이션</b> — 브라우저 데이터를 클라우드 DB로 이관</li>
+            <li><b>Render 배포</b> — Static Site + Web Service + Postgres 운영</li>
+          </ul>
+          <div class="tags"><span>Node.js</span><span>Express</span><span>PostgreSQL</span><span>REST API</span><span>Render</span><span>Vanilla JS</span></div>
+        </div>
+        <div class="visual"><canvas data-viz="flow"></canvas></div>
+      </article>
+
+      <!-- PlanetGear -->
+      <article class="card rev reveal">
+        <div class="visual"><canvas data-viz="gears"></canvas></div>
+        <div class="card-body">
+          <div class="card-emoji">⚙️</div>
+          <div class="card-top"><h3>유성기어 협력업체 관리 시스템</h3><span class="badge">PlanetGear</span></div>
+          <div class="role">공정별 협력업체 Pool 구축 &amp; 객관적 경쟁력 평가</div>
+          <p class="desc">유성기어 제작 공정 전반에 걸쳐 협력업체 Pool을 관리하고, 가중치 기반으로 경쟁력을 객관 평가하는 통합 조달 도구. 소재부터 조립까지 <b>공정별</b>로 가능 업체를 매핑해 소싱 의사결정을 데이터로 뒷받침합니다.</p>
+          <ul class="bullets">
+            <li><b>공정별 업체 Pool</b> — 원자재→단조→열처리→기어가공→ASSY 8단계 매핑</li>
+            <li><b>경쟁력 분석</b> — 접수가격·대응력·납기준수 가중치 종합점수 &amp; 레이더 차트</li>
+            <li><b>견적 이력 관리</b> — 업체별 견적 누적, 프로젝트·공정별 필터</li>
+            <li>5개 화면(대시보드·업체Pool·공정관리·견적이력·경쟁력분석) · ISO 9001 / IATF 16949 기준</li>
+          </ul>
+          <div class="tags"><span>HTML/CSS/JS</span><span>Chart.js</span><span>LocalStorage</span><span>가중치 스코어링</span><span>Node.js</span></div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="process">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="kicker">Domain Knowledge</span>
+      <h2>유성기어 제작 공정 · 8단계</h2>
+      <p>협력업체 관리 시스템의 뼈대가 된 공정 이해도. 소재에 따라 3개 Track이 병렬로 흐르다가 후처리에서 합류합니다.</p>
+    </div>
+    <div class="flow">
+      <div class="step reveal"><div class="no">01 · 02</div><h5>소재 &amp; 성형</h5><p>환봉·파이프·소결분말 3-Track / 냉간·열간단조, 소결성형</p></div>
+      <div class="step reveal"><div class="no">03</div><h5>1차 가공</h5><p>중공·니어넷 형상 대응, 치수 정밀도 확보</p></div>
+      <div class="step reveal"><div class="no">04</div><h5>열처리</h5><p>침탄·질화·퀜칭 — 표면경화 HRC 58~62</p></div>
+      <div class="step reveal"><div class="no">05</div><h5>기어가공</h5><p>호빙·브로칭·스카이빙 — 치형 정밀 가공</p></div>
+      <div class="step reveal"><div class="no">06</div><h5>연마</h5><p>기어연삭·슈퍼피니싱·숏피닝 — 조도 Ra 0.4↓</p></div>
+      <div class="step reveal"><div class="no">07 · 08</div><h5>ASSY &amp; 검사</h5><p>모듈 조립 + CMM 검사 (치형오차·경도·정밀도)</p></div>
+    </div>
+    <div class="track-legend reveal">
+      <div class="track"><span class="tk" style="background:#f5a623"></span><b>Track A</b> 환봉 → 열간단조 · 고강도</div>
+      <div class="track"><span class="tk" style="background:#38bdf8"></span><b>Track B</b> 파이프 → 냉간단조 · 중공형</div>
+      <div class="track"><span class="tk" style="background:#5eead4"></span><b>Track C</b> 소결분말 → 소결성형 · 대량 니어넷</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="stack">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="kicker">Toolbox</span>
+      <h2>구매 × 개발 역량</h2>
+      <p>협상 테이블의 언어와 배포 파이프라인의 언어를 모두 씁니다.</p>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-cat reveal"><h5>구매 · 소싱</h5><div class="chips"><span class="chip">선행구매(PI)</span><span class="chip">RFQ / 견적</span><span class="chip">원가·경쟁력 분석</span><span class="chip">협력업체 Pool</span><span class="chip">공정별 소싱</span></div></div>
+      <div class="tech-cat reveal"><h5>개발</h5><div class="chips"><span class="chip">Node.js</span><span class="chip">Express</span><span class="chip">PostgreSQL</span><span class="chip">REST API</span><span class="chip">Vanilla JS</span></div></div>
+      <div class="tech-cat reveal"><h5>데이터 · 분석</h5><div class="chips"><span class="chip">가중치 스코어링</span><span class="chip">Chart.js</span><span class="chip">대시보드 설계</span><span class="chip">데이터 마이그레이션</span></div></div>
+      <div class="tech-cat reveal"><h5>도메인 · 표준</h5><div class="chips"><span class="chip">유성기어 공정</span><span class="chip">단조·열처리·기어가공</span><span class="chip">ISO 9001</span><span class="chip">IATF 16949</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="about">
+  <div class="wrap">
+    <div class="about-card reveal">
+      <div>
+        <h3>구매 담당이<br>직접 툴을 만들면 생기는 일.</h3>
+        <p>저는 협력업체를 발굴·평가하고 원가를 협상하는 <span class="highlight">선행구매 실무자</span>이자, 그 업무를 <span class="highlight">직접 시스템으로 자동화</span>하는 개발자입니다.</p>
+        <p>엑셀 시트에 갇혀 있던 RFQ 이력과 협력업체 정보를, 누구나 조회하고 데이터로 판단할 수 있는 웹 시스템으로 바꿨습니다. <span class="highlight">현장의 문제를 가장 잘 아는 사람이 도구까지 만든다</span> — 그게 제 방식입니다.</p>
+      </div>
+      <div class="principles">
+        <div class="principle"><div class="pn">01</div><div><b>현장에서 문제를 정의한다</b><span>구매 실무에서 반복되는 병목을 직접 겪고 시스템화.</span></div></div>
+        <div class="principle"><div class="pn">02</div><div><b>판단을 데이터로 만든다</b><span>감이 아니라 가중치·지표로 협력업체를 평가.</span></div></div>
+        <div class="principle"><div class="pn">03</div><div><b>공정을 이해하고 소싱한다</b><span>8단계 공정별로 가능 업체를 매핑해 리스크 관리.</span></div></div>
+        <div class="principle"><div class="pn">04</div><div><b>엑셀을 넘어 배포한다</b><span>로컬 시트를 클라우드 DB·웹앱으로 확장.</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="contact wrap" id="contact">
+  <h2 class="reveal">구매를 더 잘,<br><span class="grad">더 빠르게 만들 방법</span>을 찾고 있습니다.</h2>
+  <p class="reveal">협업, 채용, 혹은 만든 시스템이 궁금하시다면 언제든 연락 주세요.</p>
+  <div class="contact-btns reveal">
+    <a class="btn btn-primary" href="mailto:lss4670817@gmail.com">✉ 이메일 보내기</a>
+    <a class="btn btn-ghost" href="https://github.com/JEONGHOLEE-Procurement" target="_blank" rel="noopener">GitHub @JEONGHOLEE-Procurement</a>
+  </div>
+</section>
+
+<footer>
+  © 2026 Jeongho Lee · 자동차 부품 제조사 선행구매팀 · 구매를 시스템으로 만드는 사람
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  var nav=document.getElementById("nav");
+  window.addEventListener("scroll",function(){nav.classList.toggle("scrolled",window.scrollY>30)});
+  var burger=document.getElementById("burger"),links=document.getElementById("navlinks");
+  burger.addEventListener("click",function(){links.classList.toggle("open")});
+  links.addEventListener("click",function(e){if(e.target.tagName==="A")links.classList.remove("open")});
+
+  var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.14});
+  document.querySelectorAll(".reveal").forEach(function(el){io.observe(el)});
+
+  var counted=false;
+  function countUp(){if(counted)return;counted=true;
+    document.querySelectorAll(".num[data-count]").forEach(function(el){
+      var target=+el.getAttribute("data-count"),cur=0;
+      var t=setInterval(function(){cur+=1;if(cur>=target){cur=target;clearInterval(t)}el.textContent=cur;},90);
+    });}
+  var so=new IntersectionObserver(function(e){if(e[0].isIntersecting){countUp();so.disconnect();}},{threshold:.5});
+  var se=document.querySelector(".stats");if(se)so.observe(se);
+
+  document.querySelectorAll(".card").forEach(function(card){
+    card.addEventListener("mousemove",function(e){var r=card.getBoundingClientRect();card.style.setProperty("--mx",(e.clientX-r.left)+"px");card.style.setProperty("--my",(e.clientY-r.top)+"px");});
+  });
+
+  if(reduce||!window.THREE)return;
+
+  /* ---- gear shape helper ---- */
+  function gearGeometry(teeth,outerR,rootR,holeR,depth){
+    var shape=new THREE.Shape();
+    var step=Math.PI*2/teeth;
+    for(var i=0;i<teeth;i++){
+      var a=i*step;
+      var pts=[[a,rootR],[a+step*0.18,outerR],[a+step*0.32,outerR],[a+step*0.5,rootR]];
+      for(var k=0;k<pts.length;k++){
+        var x=Math.cos(pts[k][0])*pts[k][1], y=Math.sin(pts[k][0])*pts[k][1];
+        if(i===0&&k===0)shape.moveTo(x,y);else shape.lineTo(x,y);
+      }
+    }
+    shape.closePath();
+    var hole=new THREE.Path();hole.absarc(0,0,holeR,0,Math.PI*2,true);shape.holes.push(hole);
+    return new THREE.ExtrudeGeometry(shape,{depth:depth,bevelEnabled:true,bevelThickness:.03,bevelSize:.03,bevelSegments:2,steps:1});
+  }
+
+  /* ---- HERO: planetary gear system ---- */
+  (function(){
+    var canvas=document.getElementById("hero-canvas");
+    var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    var scene=new THREE.Scene();
+    var camera=new THREE.PerspectiveCamera(50,1,.1,100);camera.position.set(0,0,9);
+
+    scene.add(new THREE.AmbientLight(0xffffff,.55));
+    var d=new THREE.DirectionalLight(0xfff0d8,1.1);d.position.set(4,6,7);scene.add(d);
+    var p1=new THREE.PointLight(0xf5a623,1.2,40);p1.position.set(-6,-2,6);scene.add(p1);
+    var p2=new THREE.PointLight(0x38bdf8,.9,40);p2.position.set(6,4,4);scene.add(p2);
+
+    var goldMat=new THREE.MeshStandardMaterial({color:0xf0a72e,metalness:.85,roughness:.35});
+    var steelMat=new THREE.MeshStandardMaterial({color:0x9fb2c9,metalness:.9,roughness:.3});
+
+    var root=new THREE.Group();root.rotation.x=-0.5;root.rotation.y=0.2;scene.add(root);
+
+    // sun gear
+    var sun=new THREE.Mesh(gearGeometry(18,1.5,1.25,.45,.4),goldMat);root.add(sun);
+
+    // ring gear (outer wireframe)
+    var ringGeo=gearGeometry(48,4.15,3.95,3.55,.5);
+    var ring=new THREE.Mesh(ringGeo,new THREE.MeshStandardMaterial({color:0x5a6b82,metalness:.7,roughness:.5,transparent:true,opacity:.35,wireframe:true}));
+    root.add(ring);
+
+    // planet gears on a carrier
+    var carrier=new THREE.Group();root.add(carrier);
+    var planets=[];var pd=2.55;
+    for(var i=0;i<3;i++){
+      var ang=i*Math.PI*2/3;
+      var g=new THREE.Group();g.position.set(Math.cos(ang)*pd,Math.sin(ang)*pd,0);
+      var m=new THREE.Mesh(gearGeometry(12,1.02,.82,.3,.36),steelMat);g.add(m);
+      carrier.add(g);planets.push({grp:g,mesh:m});
+    }
+
+    // particle dust
+    var N=350,pos=new Float32Array(N*3);
+    for(var j=0;j<N;j++){var r=7+Math.random()*16,th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+      pos[j*3]=r*Math.sin(ph)*Math.cos(th);pos[j*3+1]=r*Math.sin(ph)*Math.sin(th);pos[j*3+2]=r*Math.cos(ph);}
+    var pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0xc7a25a,size:.05,transparent:true,opacity:.5})));
+
+    var mx=0,my=0,tx=0,ty=0;
+    window.addEventListener("mousemove",function(e){tx=(e.clientX/window.innerWidth-.5);ty=(e.clientY/window.innerHeight-.5);});
+    function resize(){var w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+      // pull camera back on narrow screens; offset gears to the right on wide so headline stays clear
+      camera.position.z=w<720?13:9;
+      root.position.x=w<900?0:(w<1200?2.0:2.8);
+      root.position.y=w<900?1.6:0.2;}
+    window.addEventListener("resize",resize);resize();
+
+    var clock=new THREE.Clock();
+    function animate(){requestAnimationFrame(animate);var t=clock.getElapsedTime();
+      var s=0.5;
+      sun.rotation.z=t*s;                          // sun spins
+      carrier.rotation.z=-t*s*0.34;                // carrier revolves
+      planets.forEach(function(pl){pl.mesh.rotation.z=t*s*1.8;}); // planets spin (opposite feel)
+      ring.rotation.z=t*0.03;
+      root.rotation.y=0.2+Math.sin(t*.15)*.12;
+      mx+=(tx-mx)*.04;my+=(ty-my)*.04;
+      camera.position.x=mx*2.4;camera.position.y=-my*1.8;camera.lookAt(0,0,0);
+      renderer.render(scene,camera);
+    }
+    animate();
+  })();
+
+  /* ---- CARD: RFQ data flow ---- */
+  document.querySelectorAll("canvas[data-viz='flow']").forEach(function(cv){
+    var renderer=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    var scene=new THREE.Scene();var camera=new THREE.PerspectiveCamera(50,1,.1,100);camera.position.z=6;
+    scene.add(new THREE.AmbientLight(0xffffff,.7));
+    var dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(3,4,5);scene.add(dl);
+    var grp=new THREE.Group();grp.rotation.x=-.15;scene.add(grp);
+    // DB cylinder (hub) on right
+    var db=new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,1.4,24,1,false),new THREE.MeshStandardMaterial({color:0xf0a72e,metalness:.6,roughness:.4}));
+    db.position.set(1.9,0,0);grp.add(db);
+    for(var r=0;r<3;r++){var ringm=new THREE.Mesh(new THREE.TorusGeometry(.7,.05,8,24),new THREE.MeshStandardMaterial({color:0xffd27a,metalness:.5,roughness:.4}));ringm.position.set(1.9,.55-r*.55,0);ringm.rotation.x=Math.PI/2;grp.add(ringm);}
+    // supplier nodes (left) + flowing dots
+    var sources=[[-2.4,1.2],[-2.6,0],[-2.4,-1.2]];var flows=[];
+    sources.forEach(function(s){
+      var node=new THREE.Mesh(new THREE.IcosahedronGeometry(.26,0),new THREE.MeshStandardMaterial({color:0x38bdf8,metalness:.4,roughness:.5}));
+      node.position.set(s[0],s[1],0);grp.add(node);
+      var mid=new THREE.Vector3((s[0]+1.9)/2,s[1]*.3,.6);
+      var curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(s[0],s[1],0),mid,new THREE.Vector3(1.4,0,0));
+      var lg=new THREE.BufferGeometry().setFromPoints(curve.getPoints(24));
+      grp.add(new THREE.Line(lg,new THREE.LineBasicMaterial({color:0x38bdf8,transparent:true,opacity:.3})));
+      for(var k=0;k<3;k++){var dot=new THREE.Mesh(new THREE.SphereGeometry(.08,8,8),new THREE.MeshBasicMaterial({color:0xfff0d0}));grp.add(dot);flows.push({curve:curve,dot:dot,off:k/3+Math.random()*.1});}
+    });
+    function rs(){var w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+    var clock=new THREE.Clock();
+    (function loop(){requestAnimationFrame(loop);rs();var t=clock.getElapsedTime();
+      grp.rotation.y=Math.sin(t*.25)*.18;db.rotation.y=t*.5;
+      flows.forEach(function(f){var u=(t*.28+f.off)%1;var pt=f.curve.getPoint(u);f.dot.position.copy(pt);f.dot.scale.setScalar(1-Math.abs(u-.5));});
+      renderer.render(scene,camera);})();
+  });
+
+  /* ---- CARD: ring of process gears ---- */
+  document.querySelectorAll("canvas[data-viz='gears']").forEach(function(cv){
+    var renderer=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    var scene=new THREE.Scene();var camera=new THREE.PerspectiveCamera(50,1,.1,100);camera.position.z=7;
+    scene.add(new THREE.AmbientLight(0xffffff,.6));
+    var dl=new THREE.DirectionalLight(0xfff0d8,1);dl.position.set(3,5,6);scene.add(dl);
+    scene.add((function(){var p=new THREE.PointLight(0x38bdf8,.7,30);p.position.set(-5,-3,4);return p;})());
+    var grp=new THREE.Group();grp.rotation.x=-.35;scene.add(grp);
+    var cols=[0xf0a72e,0x38bdf8,0x5eead4];
+    var center=new THREE.Mesh(gearGeometry(16,1.15,.95,.34,.34),new THREE.MeshStandardMaterial({color:0xf0a72e,metalness:.85,roughness:.35}));
+    grp.add(center);
+    var ring=[];var R=2.5;
+    for(var i=0;i<8;i++){var a=i*Math.PI*2/8;
+      var g=new THREE.Mesh(gearGeometry(10,.62,.48,.18,.28),new THREE.MeshStandardMaterial({color:cols[i%3],metalness:.8,roughness:.4}));
+      g.position.set(Math.cos(a)*R,Math.sin(a)*R,0);grp.add(g);ring.push(g);}
+    function rs(){var w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+    var clock=new THREE.Clock();
+    (function loop(){requestAnimationFrame(loop);rs();var t=clock.getElapsedTime();
+      center.rotation.z=t*.5;grp.rotation.z=t*.06;
+      ring.forEach(function(g,i){g.rotation.z=-t*.9+(i%2?0.3:0);});
+      renderer.render(scene,camera);})();
+  });
+
+})();
+</script>
+</body>
+</html>
